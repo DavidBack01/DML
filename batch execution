@@ -1,0 +1,48 @@
+import java.sql.*;
+
+public class ComplexDMLBatchExample {
+    public static void main(String[] args) {
+        String url = "jdbc:mysql://localhost:3306/mydatabase";
+        String username = "username";
+        String password = "password";
+
+        String insertQuery = "INSERT INTO users (name, age) VALUES (?, ?)";
+        String updateQuery = "UPDATE users SET age = ? WHERE name = ?";
+        String deleteQuery = "DELETE FROM users WHERE age < ?";
+
+        try {
+            Connection connection = DriverManager.getConnection(url, username, password);
+            connection.setAutoCommit(false);
+
+            Statement statement = connection.createStatement();
+
+            statement.addBatch(insertQuery);
+            statement.addBatch(updateQuery);
+            statement.addBatch(deleteQuery);
+
+            PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
+            insertStatement.setString(1, "Alice");
+            insertStatement.setInt(2, 25);
+            insertStatement.addBatch();
+
+            PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+            updateStatement.setInt(1, 26);
+            updateStatement.setString(2, "Alice");
+            updateStatement.addBatch();
+
+            PreparedStatement deleteStatement = connection.prepareStatement(deleteQuery);
+            deleteStatement.setInt(1, 20);
+            deleteStatement.addBatch();
+
+            int[] insertCounts = insertStatement.executeBatch();
+            int[] updateCounts = updateStatement.executeBatch();
+            int[] deleteCounts = deleteStatement.executeBatch();
+
+            connection.commit();
+
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
